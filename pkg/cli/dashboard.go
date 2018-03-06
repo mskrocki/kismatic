@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/apprenda/kismatic/pkg/install"
+	"github.com/apprenda/kismatic/pkg/util"
 	"github.com/pkg/browser"
 	"github.com/spf13/cobra"
 )
@@ -71,6 +72,13 @@ func doDashboard(in io.Reader, out io.Writer, opts *dashboardOpts) error {
 	fmt.Fprintf(out, "Opening kubernetes dashboard in default browser...\n")
 	if generateErr == nil {
 		fmt.Fprintf(out, "Use the kubeconfig in %q\n", adminKubeconfig)
+	}
+	// Dashboard is accessible.. take action
+	// In URL mode or
+	// Running in a docker container, can't open a browser from here
+	if opts.dashboardURLMode || util.RunningInDocker() {
+		fmt.Fprintln(out, url)
+		return nil
 	}
 	if err := browser.OpenURL(url); err != nil {
 		fmt.Fprintf(out, "Unexpected error opening the kubernetes dashboard: %v. You may access it at %q", err, url)
