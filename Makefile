@@ -244,8 +244,8 @@ copy-inspector:
 	cp -r bin/inspector/* $(BUILD_OUTPUT)/ansible/playbooks/inspector
 
 copy-playbooks:
-	rm -rf $(filter-out $(BUILD_OUTPUT)/ansible/playbooks/inspector $(BUILD_OUTPUT)/ansible/playbooks/kuberang, $(wildcard $(BUILD_OUTPUT)/ansible/playbooks/*))
 	mkdir -p $(BUILD_OUTPUT)/ansible
+	rm -rf $(filter-out $(BUILD_OUTPUT)/ansible/playbooks/inspector $(BUILD_OUTPUT)/ansible/playbooks/kuberang, $(wildcard $(BUILD_OUTPUT)/ansible/playbooks/*))
 	cp -r $(wildcard ansible/*) $(BUILD_OUTPUT)/ansible/playbooks
 
 copy-providers:
@@ -365,7 +365,7 @@ dist-docker:
 	docker push apprenda/kismatic:dev-$(BRANCH)
 
 docker-release:
-	@$(MAKE) GOOS=linux BUILD_OUTPUT=docker dist-common
+	@$(MAKE) GOOS=linux BUILD_OUTPUT=out-docker dist-common
 	docker build . --no-cache --tag apprenda/kismatic
 	docker push apprenda/kismatic
 	
@@ -418,6 +418,6 @@ trigger-ci-slow-tests:
 	  $(CIRCLE_ENDPOINT)
 trigger-ci-focused-tests:
 	@echo Triggering focused test
-	curl -u $(CIRCLE_CI_TOKEN): -X POST --header "Content-Type: application/json"     \
-		-d "{\"build_parameters\": {\"FOCUS\": \"$(FOCUS)\"}}"                        \
-		$(CIRCLE_ENDPOINT)
+	curl -u $(CIRCLE_CI_TOKEN): -X POST --header "Content-Type: application/json"    \
+	  -d "{\"build_parameters\": {\"FOCUS\": \"$(FOCUS)\"}}"                         \
+	  $(CIRCLE_ENDPOINT)

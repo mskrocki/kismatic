@@ -78,6 +78,14 @@ func doDashboard(in io.Reader, out io.Writer, opts *dashboardOpts) error {
 	// Running in a docker container, can't open a browser from here
 	if opts.dashboardURLMode || util.RunningInDocker() {
 		fmt.Fprintln(out, url)
+		cmd := exec.Command("./kubectl", "proxy", "--kubeconfig", kubeconfig)
+		cmd.Stdin = in
+		cmd.Stdout = out
+		cmd.Stderr = out
+		err := cmd.Run()
+		if err != nil {
+			return fmt.Errorf("Error running kubectl proxy: %v", err)
+		}
 		return nil
 	}
 	if err := browser.OpenURL(url); err != nil {
