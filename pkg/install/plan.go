@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"sync"
@@ -253,7 +254,12 @@ func (fp *FilePlanner) Write(p *Plan) error {
 	if marshalErr != nil {
 		return fmt.Errorf("error marshalling plan to yaml: %v", marshalErr)
 	}
-
+	if util.RunningInDocker() {
+		if err := os.MkdirAll(filepath.Join("assets", p.Cluster.Name), 0777); err != nil {
+			return err
+		}
+		fp.File = filepath.Join("assets", p.Cluster.Name, fp.File)
+	}
 	f, err := os.Create(fp.File)
 	if err != nil {
 		return fmt.Errorf("error making plan file: %v", err)
