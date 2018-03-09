@@ -99,7 +99,7 @@ The basic installation instructions still apply. The entrypoint to the container
 `docker run -itv $(pwd):/root/kismatic/assets apprenda/kismatic`
 If you're looking to provide your own terraform config, you need to add a volume for that as well.
 I.E.:
-`docker run -itv $(pwd):/root/kismatic/assets -v path_to_dir_with_HCL:/root/kismatic/providers apprenda/kismatic`
+`docker run -itv $(pwd):/root/kismatic/assets -v path_to_dir_with_HCL:/root/kismatic/providers/your_provider_name_here apprenda/kismatic`
 Please note that the path needs to be the parent directory (that is, the result of if you `pwd` in the location of the scripts).
 
 ### Using KET-server 
