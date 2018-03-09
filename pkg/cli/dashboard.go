@@ -78,7 +78,7 @@ func doDashboard(in io.Reader, out io.Writer, opts *dashboardOpts) error {
 	// In URL mode or
 	// Running in a docker container, can't open a browser from here
 	if util.RunningInDocker() {
-		fmt.Fprintln(out, url)
+		fmt.Fprintf(out, "Navigate to %s in your browser to access the dashboard\n", url)
 		cmd = exec.Command("./kubectl", "proxy", "--kubeconfig", kubeconfig, "--address", "0.0.0.0")
 	} else {
 		if err := browser.OpenURL(url); err != nil {

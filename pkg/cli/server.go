@@ -62,7 +62,7 @@ If cert-file or key-file are not provided, a self-signed CA will be used to crea
 	cmd.Flags().StringVarP(&options.port, "port", "p", "", "port to start the server on. Defaults to 8443, or 8080 when TLS is disabled.")
 	cmd.Flags().StringVar(&options.certFile, "cert-file", "", "path to the TLS cert file")
 	cmd.Flags().StringVar(&options.keyFile, "key-file", "", "path to the TLS key file")
-	cmd.Flags().StringVar(&options.dbFile, "db-file", "./server.db", "path to the database file")
+	cmd.Flags().StringVar(&options.dbFile, "db-file", "./assets/server.db", "path to the database file")
 	cmd.Flags().BoolVar(&options.disableTLS, "insecure-disable-tls", false, "set to true to disable TLS")
 	return cmd
 }
