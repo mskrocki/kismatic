@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
 	"context"
 
@@ -50,6 +51,10 @@ type WatchResponse struct {
 func New(path string, mode os.FileMode, logger *log.Logger) (WatchedStore, error) {
 	if logger == nil {
 		return nil, fmt.Errorf("logger must be provided")
+	}
+	dir, _ := filepath.Split(path)
+	if err := os.MkdirAll(dir, 0777); err != nil {
+		return nil, err
 	}
 	db, err := bolt.Open(path, mode, nil)
 	if err != nil {
