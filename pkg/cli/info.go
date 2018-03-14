@@ -30,8 +30,8 @@ This will be retrieved by connecting to each node via ssh`,
 			return list(out, opts)
 		},
 	}
-	cmd.Flags().StringVarP(&opts.planFilename, "plan-file", "f", "kismatic-cluster.yaml", "DEPRECATED: path to the installation plan file")
-	cmd.Flags().StringVarP(&opts.outputFormat, "output", "o", "simple", `DEPRECATED: output format (options "simple"|"json")`)
+	cmd.Flags().StringVarP(&opts.planFilename, "plan-file", "f", "kismatic-cluster.yaml", "path to the installation plan file")
+	cmd.Flags().StringVarP(&opts.outputFormat, "output", "o", "simple", `output format (options "simple"|"json")`)
 	return cmd
 }
 
