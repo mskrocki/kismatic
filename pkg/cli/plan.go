@@ -115,11 +115,12 @@ func doPlan(in io.Reader, out io.Writer, planner install.FilePlanner) error {
 	fmt.Fprintf(out, "- %d nfs volumes\n", nfsVolumes)
 	fmt.Fprintln(out)
 
-	if util.RunningInDocker() {
-		if err := os.MkdirAll(filepath.Join("assets", name), 0777); err != nil {
+	// If we're using the default plan file location
+	if planner.File == "kismatic-cluster.yaml" {
+		if err := os.MkdirAll(filepath.Join("clusters", name), 0777); err != nil {
 			return err
 		}
-		planner.File = filepath.Join("assets", name, planner.File)
+		planner.File = filepath.Join("clusters", name, planner.File)
 	}
 
 	// If we are using KET to provision infrastructure, use the template file

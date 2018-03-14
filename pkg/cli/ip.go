@@ -30,7 +30,7 @@ func NewCmdIP(out io.Writer) *cobra.Command {
 	}
 
 	// PersistentFlags
-	cmd.PersistentFlags().StringVarP(&opts.planFilename, "plan-file", "f", "kismatic-cluster.yaml", "path to the installation plan file")
+	cmd.PersistentFlags().StringVarP(&opts.planFilename, "plan-file", "f", "kismatic-cluster.yaml", "DEPRECATED: path to the installation plan file")
 
 	return cmd
 }
