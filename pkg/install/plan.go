@@ -22,6 +22,10 @@ const (
 	defaultCAExpiry              = "17520h"
 )
 
+type InstallOpts struct {
+	PlanFilename string
+}
+
 // PlanTemplateOptions contains the options that are desired when generating
 // a plan file template.
 type PlanTemplateOptions struct {

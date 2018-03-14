@@ -21,7 +21,7 @@ type validateOpts struct {
 }
 
 // NewCmdValidate creates a new install validate command
-func NewCmdValidate(out io.Writer, installOpts *installOpts) *cobra.Command {
+func NewCmdValidate(out io.Writer, installOpts *install.InstallOpts) *cobra.Command {
 	opts := &validateOpts{}
 	cmd := &cobra.Command{
 		Use:   "validate",
@@ -30,8 +30,8 @@ func NewCmdValidate(out io.Writer, installOpts *installOpts) *cobra.Command {
 			if len(args) != 0 {
 				return fmt.Errorf("Unexpected args: %v", args)
 			}
-			planner := &install.FilePlanner{File: installOpts.planFilename}
-			opts.planFile = installOpts.planFilename
+			planner := &install.FilePlanner{File: installOpts.PlanFilename}
+			opts.planFile = installOpts.PlanFilename
 			return doValidate(out, planner, opts)
 		},
 	}

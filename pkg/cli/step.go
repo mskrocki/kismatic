@@ -25,10 +25,10 @@ type stepCmd struct {
 }
 
 // NewCmdStep returns the step command
-func NewCmdStep(out io.Writer, opts *installOpts) *cobra.Command {
+func NewCmdStep(out io.Writer, opts *install.InstallOpts) *cobra.Command {
 	stepCmd := &stepCmd{
 		out:      out,
-		planFile: opts.planFilename,
+		planFile: opts.PlanFilename,
 	}
 	cmd := &cobra.Command{
 		Use:   "step PLAY_NAME",
@@ -47,7 +47,7 @@ func NewCmdStep(out io.Writer, opts *installOpts) *cobra.Command {
 				return err
 			}
 			stepCmd.task = args[0]
-			stepCmd.planFile = opts.planFilename
+			stepCmd.planFile = opts.PlanFilename
 			stepCmd.planner = &install.FilePlanner{File: stepCmd.planFile}
 			stepCmd.executor = executor
 			return stepCmd.run()

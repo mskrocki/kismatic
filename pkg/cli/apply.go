@@ -31,7 +31,7 @@ type applyOpts struct {
 }
 
 // NewCmdApply creates a cluter using the plan file
-func NewCmdApply(out io.Writer, installOpts *installOpts) *cobra.Command {
+func NewCmdApply(out io.Writer, installOpts *install.InstallOpts) *cobra.Command {
 	applyOpts := applyOpts{}
 	cmd := &cobra.Command{
 		Use:   "apply",
@@ -40,7 +40,7 @@ func NewCmdApply(out io.Writer, installOpts *installOpts) *cobra.Command {
 			if len(args) != 0 {
 				return fmt.Errorf("Unexpected args: %v", args)
 			}
-			planner := &install.FilePlanner{File: installOpts.planFilename}
+			planner := &install.FilePlanner{File: installOpts.PlanFilename}
 			executorOpts := install.ExecutorOptions{
 				GeneratedAssetsDirectory: applyOpts.generatedAssetsDir,
 				OutputFormat:             applyOpts.outputFormat,
@@ -55,7 +55,7 @@ func NewCmdApply(out io.Writer, installOpts *installOpts) *cobra.Command {
 				out:                out,
 				planner:            planner,
 				executor:           executor,
-				planFile:           installOpts.planFilename,
+				planFile:           installOpts.PlanFilename,
 				generatedAssetsDir: applyOpts.generatedAssetsDir,
 				verbose:            applyOpts.verbose,
 				outputFormat:       applyOpts.outputFormat,
