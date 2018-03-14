@@ -96,10 +96,10 @@ The installation consists of three phases:
 ### Using the CLI
 
 The basic installation instructions still apply. The entrypoint to the container is the binary itself. Please note that the container itself does not have persistent storage, so you need a volume mount to preserve your plan file, ssh keys, terraform state, etc.
-`docker run -itv $(pwd):/root/kismatic/assets apprenda/kismatic`
+`docker run -itv $(pwd):/root/kismatic/clusters apprenda/kismatic`
 If you're looking to provide your own terraform config, you need to add a volume for that as well.
 I.E.:
-`docker run -itv $(pwd):/root/kismatic/assets -v path_to_dir_with_HCL:/root/kismatic/providers/your_provider_name_here apprenda/kismatic`
+`docker run -itv $(pwd):/root/kismatic/clusters -v path_to_dir_with_HCL:/root/kismatic/providers/your_provider_name_here apprenda/kismatic`
 Please note that the path needs to be the parent directory (that is, the result of if you `pwd` in the location of the scripts).
 
 ### Using KET-server 

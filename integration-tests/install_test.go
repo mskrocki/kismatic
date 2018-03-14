@@ -47,10 +47,10 @@ var _ = Describe("kismatic", func() {
 				Expect(helpText).To(ContainSubstring("0 storage nodes"))
 				Expect(helpText).To(ContainSubstring("0 nfs volumes"))
 
-				Expect(FileExists("assets/kismatic-cluster/kismatic-cluster.yaml")).To(Equal(true))
+				Expect(FileExists("clusters/kismatic-cluster/kismatic-cluster.yaml")).To(Equal(true))
 
 				By("Reading generated plan file")
-				yamlBytes, err := ioutil.ReadFile("assets/kismatic-cluster/kismatic-cluster.yaml")
+				yamlBytes, err := ioutil.ReadFile("clusters/kismatic-cluster/kismatic-cluster.yaml")
 				if err != nil {
 					Fail("Could not read cluster file")
 				}
