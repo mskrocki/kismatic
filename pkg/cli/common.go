@@ -2,12 +2,20 @@ package cli
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/spf13/pflag"
 )
 
+var defaultClusterPath = filepath.Join("clusters", "kubernetes", "kismatic-kismatic.yaml")
+var defaultGeneratedPath = filepath.Join("clusters", "kubernetes", "generated")
+
 func addPlanFileFlag(flagSet *pflag.FlagSet, p *string) {
-	flagSet.StringVarP(p, "plan-file", "f", "kismatic-cluster.yaml", "path to the installation plan file")
+	flagSet.StringVarP(p, "plan-file", "f", defaultClusterPath, "path to the installation plan file")
+}
+
+func addGeneratedFlag(flagSet *pflag.FlagSet, p *string) {
+	flagSet.StringVarP(p, "generated-assets-dir", "g", defaultGeneratedPath, "path to the directory where assets generated during the installation process will be stored")
 }
 
 type planFileNotFoundErr struct {
