@@ -28,7 +28,8 @@ func NewCmdInstall(in io.Reader, out io.Writer) *cobra.Command {
 	cmd.AddCommand(NewCmdProvision(in, out, opts))
 	cmd.AddCommand(NewCmdDestroy(in, out, opts))
 	// PersistentFlags
-	addPlanFileFlag(cmd.PersistentFlags(), &opts.PlanFilename)
+	addPlanFileFlag(cmd.PersistentFlags(), &opts.PlanFile)
+	addGeneratedFlag(cmd.PersistentFlags(), &opts.GeneratedDir)
 
 	return cmd
 }

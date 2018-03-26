@@ -197,10 +197,10 @@ func (ae *ansibleExecutor) execute(t task) error {
 	}
 	// Save the plan file that was used for this execution
 	fp := FilePlanner{
-		File: filepath.Join(runDirectory, "kismatic-cluster.yaml"),
+		PlanFile: filepath.Join(runDirectory, "kismatic-cluster.yaml"),
 	}
 	if err = fp.Write(&t.plan); err != nil {
-		return fmt.Errorf("error recording plan file to %s: %v", fp.File, err)
+		return fmt.Errorf("error recording plan file to %s: %v", fp.PlanFile, err)
 	}
 	ansibleLogFilename := filepath.Join(runDirectory, "ansible.log")
 	ansibleLogFile, err := os.Create(ansibleLogFilename)

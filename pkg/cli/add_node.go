@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/apprenda/kismatic/pkg/install"
@@ -28,19 +29,67 @@ var validRoles = []string{"worker", "ingress", "storage"}
 func NewCmdAddNode(out io.Writer, installOpts *install.InstallOpts) *cobra.Command {
 	opts := &addNodeOpts{}
 	cmd := &cobra.Command{
-		Use:     "add-node NODE_NAME NODE_IP [NODE_INTERNAL_IP]",
+		Use:     "add-node [CLUSTER_NAME] NODE_NAME NODE_IP [NODE_INTERNAL_IP]",
 		Short:   "add a new node to an existing Kubernetes cluster",
 		Aliases: []string{"add-worker"},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) < 2 || len(args) > 3 {
+			if len(args) < 2 || len(args) > 4 {
 				return cmd.Usage()
 			}
-			newNode := install.Node{
-				Host: args[0],
-				IP:   args[1],
-			}
+			planner := &install.FilePlanner{}
+			newNode := install.Node{}
 			if len(args) == 3 {
-				newNode.InternalIP = args[2]
+				if install.ValidateAllowedAddress(args[1]) {
+					// If arg[1] is an IP, the last arg was optionally included and not the first
+					newNode.Host = args[0]
+					newNode.IP = args[1]
+					newNode.InternalIP = args[2]
+					if installOpts.GeneratedDir != defaultGeneratedPath && installOpts.PlanFile == defaultClusterPath {
+						generatedParent, _ := filepath.Split(installOpts.GeneratedDir)
+						planner.PlanFile = filepath.Join(generatedParent, "kismatic-cluster.yaml")
+						planner.GeneratedDir = installOpts.GeneratedDir
+					} else if installOpts.PlanFile != defaultClusterPath && installOpts.GeneratedDir == defaultGeneratedPath {
+						planParent, _ := filepath.Split(installOpts.PlanFile)
+						planner.GeneratedDir = filepath.Join(planParent, "generated")
+						planner.PlanFile = installOpts.PlanFile
+					} else {
+						planner.GeneratedDir = installOpts.GeneratedDir
+						planner.PlanFile = installOpts.PlanFile
+					}
+				} else if install.ValidateAllowedAddress(args[2]) {
+					// else check if arg[2] is a valid IP - first optional arg was included
+					clusterName := args[0]
+					if installOpts.GeneratedDir != defaultGeneratedPath || installOpts.PlanFile != defaultClusterPath {
+						// if name is given and flags are not defaults, fail
+						return fmt.Errorf("cannot specify clusters by name and by plan or generated flags")
+					}
+					exists, err := install.ValidateClusterExists(clusterName)
+					if err != nil {
+						return err
+					}
+					if !exists {
+						return fmt.Errorf("cluster %v not found", clusterName)
+					}
+					newNode.Host = args[1]
+					newNode.IP = args[2]
+
+				} else {
+					// bad input
+					return fmt.Errorf("Invalid input: no cluster IP found")
+				}
+			}
+			if len(args) == 4 {
+				clusterName := args[0]
+				exists, err := install.ValidateClusterExists(clusterName)
+				if err != nil {
+					return err
+				}
+				if !exists {
+					return fmt.Errorf("cluster %v not found", clusterName)
+				}
+				newNode.Host = args[1]
+				newNode.IP = args[2]
+				newNode.InternalIP = args[3]
 			}
 			// default to 'worker'
 			if len(opts.Roles) == 0 {
@@ -61,12 +110,12 @@ func NewCmdAddNode(out io.Writer, installOpts *install.InstallOpts) *cobra.Comma
 					newNode.Labels[pair[0]] = pair[1]
 				}
 			}
-			return doAddNode(out, installOpts.PlanFilename, opts, newNode)
+
+			return doAddNode(out, planner, opts, newNode)
 		},
 	}
 	cmd.Flags().StringSliceVar(&opts.Roles, "roles", []string{}, "roles separated by ',' (options \"worker\"|\"ingress\"|\"storage\")")
 	cmd.Flags().StringSliceVarP(&opts.NodeLabels, "labels", "l", []string{}, "key=value pairs separated by ','")
-	cmd.Flags().StringVar(&opts.GeneratedAssetsDirectory, "generated-assets-dir", "generated", "path to the directory where assets generated during the installation process will be stored")
 	cmd.Flags().BoolVar(&opts.RestartServices, "restart-services", false, "force restart clusters services (Use with care)")
 	cmd.Flags().BoolVar(&opts.Verbose, "verbose", false, "enable verbose logging from the installation")
 	cmd.Flags().StringVarP(&opts.OutputFormat, "output", "o", "simple", "installation output format (options \"simple\"|\"raw\")")
@@ -74,11 +123,7 @@ func NewCmdAddNode(out io.Writer, installOpts *install.InstallOpts) *cobra.Comma
 	return cmd
 }
 
-func doAddNode(out io.Writer, planFile string, opts *addNodeOpts, newNode install.Node) error {
-	planner := &install.FilePlanner{File: planFile}
-	if !planner.PlanExists() {
-		return planFileNotFoundErr{filename: planFile}
-	}
+func doAddNode(out io.Writer, planner *install.FilePlanner, opts *addNodeOpts, newNode install.Node) error {
 	execOpts := install.ExecutorOptions{
 		GeneratedAssetsDirectory: opts.GeneratedAssetsDirectory,
 		OutputFormat:             opts.OutputFormat,

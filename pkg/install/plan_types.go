@@ -750,6 +750,16 @@ func (p *Plan) AllAddresses() string {
 
 // GetSSHConnection returns the SSHConnection struct containing the node and SSHConfig details
 func (p *Plan) GetSSHConnection(host string) (*SSHConnection, error) {
+	foundNode := p.ValidateHostExists(host)
+	if foundNode == nil {
+		return nil, fmt.Errorf("node %q not found in the plan", host)
+	}
+
+	return &SSHConnection{&p.Cluster.SSH, foundNode}, nil
+}
+
+// ValidateHostExists searches for Node with host (or IP) that matches the input, if found returns a pointer to the node, and a bool of found status
+func (p *Plan) ValidateHostExists(host string) *Node {
 	nodes := p.getAllNodes()
 
 	var isIP bool
@@ -784,16 +794,7 @@ func (p *Plan) GetSSHConnection(host string) (*SSHConnection, error) {
 			foundNode = firstIfItExists(p.Storage.Nodes)
 		}
 	}
-
-	if foundNode == nil {
-		notFoundErr := fmt.Errorf("node %q not found in the plan", host)
-		if isIP {
-			notFoundErr = fmt.Errorf("node with IP %q not found in the plan", host)
-		}
-		return nil, notFoundErr
-	}
-
-	return &SSHConnection{&p.Cluster.SSH, foundNode}, nil
+	return foundNode
 }
 
 // GetSSHClient is a convience method that calls GetSSHConnection and returns an SSH client with the result

@@ -24,18 +24,39 @@ type validateOpts struct {
 func NewCmdValidate(out io.Writer, installOpts *install.InstallOpts) *cobra.Command {
 	opts := &validateOpts{}
 	cmd := &cobra.Command{
-		Use:   "validate",
+		Use:   "validate CLUSTER_NAME",
 		Short: "validate your plan file",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) != 0 {
-				return fmt.Errorf("Unexpected args: %v", args)
+			planner := &install.FilePlanner{}
+			if installOpts.GeneratedDir == defaultGeneratedPath && installOpts.PlanFile == defaultClusterPath && len(args) > 0 {
+				for _, clusterName := range args {
+					planner.SetDirs(clusterName)
+					if err := doValidate(out, planner, opts); err != nil {
+						return err
+					}
+				}
+			} else {
+				if len(args) > 0 {
+					return fmt.Errorf("Error validating: cannot specify clusters by name and by plan file flag or generated dir flag")
+				}
+				// Might feel a little strange, but if either generated or plan flags are set, assume the other is in the same place, and not at the default.
+				if installOpts.GeneratedDir != defaultGeneratedPath && installOpts.PlanFile != defaultClusterPath {
+					planner.PlanFile = installOpts.PlanFile
+					planner.GeneratedDir = installOpts.GeneratedDir
+				} else if installOpts.GeneratedDir != defaultGeneratedPath {
+					generatedParent, _ := filepath.Split(installOpts.GeneratedDir)
+					planner.PlanFile = filepath.Join(generatedParent, "kismatic-cluster.yaml")
+				} else if installOpts.PlanFile != defaultClusterPath {
+					planParent, _ := filepath.Split(installOpts.PlanFile)
+					planner.GeneratedDir = filepath.Join(planParent, "generated")
+				}
+				if err := doValidate(out, planner, opts); err != nil {
+					return err
+				}
 			}
-			planner := &install.FilePlanner{File: installOpts.PlanFilename}
-			opts.planFile = installOpts.PlanFilename
-			return doValidate(out, planner, opts)
+			return nil
 		},
 	}
-	cmd.Flags().StringVar(&opts.generatedAssetsDir, "generated-assets-dir", "generated", "path to the directory where assets generated during the installation process will be stored")
 	cmd.Flags().BoolVar(&opts.verbose, "verbose", false, "enable verbose logging from the installation")
 	cmd.Flags().StringVarP(&opts.outputFormat, "output", "o", "simple", "installation output format (options simple|raw)")
 	cmd.Flags().BoolVar(&opts.skipPreFlight, "skip-preflight", false, "skip pre-flight checks")

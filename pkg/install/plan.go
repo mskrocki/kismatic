@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"sync"
@@ -23,7 +24,8 @@ const (
 )
 
 type InstallOpts struct {
-	PlanFilename string
+	PlanFile     string
+	GeneratedDir string
 }
 
 // PlanTemplateOptions contains the options that are desired when generating
@@ -53,9 +55,7 @@ type Planner interface {
 }
 
 // FilePlanner is a file-based installation planner
-type FilePlanner struct {
-	File string
-}
+type FilePlanner = InstallOpts
 
 // BytesPlanner is an in memory bytes planner
 type BytesPlanner struct {
@@ -83,7 +83,7 @@ func (fp *BytesPlanner) Write(p *Plan) error {
 
 // Read the plan from the file system
 func (fp *FilePlanner) Read() (*Plan, error) {
-	d, err := ioutil.ReadFile(fp.File)
+	d, err := ioutil.ReadFile(fp.PlanFile)
 	if err != nil {
 		return nil, fmt.Errorf("could not read file: %v", err)
 	}
@@ -100,6 +100,12 @@ func (fp *FilePlanner) Read() (*Plan, error) {
 	setDefaults(p)
 
 	return p, nil
+}
+
+// SetDirs sets the PlanFile and GeneratedDir locations for a given cluster name
+func (fp *FilePlanner) SetDirs(name string) {
+	fp.PlanFile = filepath.Join("clusters", name, "kismatic-cluster.yaml")
+	fp.GeneratedDir = filepath.Join("clusters", name, "generated")
 }
 
 func readDeprecatedFields(p *Plan) {
@@ -257,7 +263,7 @@ func (fp *FilePlanner) Write(p *Plan) error {
 	if marshalErr != nil {
 		return fmt.Errorf("error marshalling plan to yaml: %v", marshalErr)
 	}
-	f, err := os.Create(fp.File)
+	f, err := os.Create(fp.PlanFile)
 	if err != nil {
 		return fmt.Errorf("error making plan file: %v", err)
 	}
@@ -357,7 +363,7 @@ func countLeadingSpace(s string) int {
 
 // PlanExists return true if the plan exists on the file system
 func (fp *FilePlanner) PlanExists() bool {
-	_, err := os.Stat(fp.File)
+	_, err := os.Stat(fp.PlanFile)
 	return !os.IsNotExist(err)
 }
 

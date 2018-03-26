@@ -14,7 +14,7 @@ import (
 )
 
 // NewCmdPlan creates a new install plan command
-func NewCmdPlan(in io.Reader, out io.Writer, options *installOpts) *cobra.Command {
+func NewCmdPlan(in io.Reader, out io.Writer, options *install.InstallOpts) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "plan",
 		Short: "plan your Kubernetes cluster and generate a plan file",
@@ -22,8 +22,7 @@ func NewCmdPlan(in io.Reader, out io.Writer, options *installOpts) *cobra.Comman
 			if len(args) != 0 {
 				return fmt.Errorf("Unexpected args: %v", args)
 			}
-			planner := install.FilePlanner{File: options.planFilename}
-			return doPlan(in, out, planner)
+			return doPlan(in, out, *options)
 		},
 	}
 
@@ -34,11 +33,14 @@ func doPlan(in io.Reader, out io.Writer, planner install.FilePlanner) error {
 	providersDir := "./providers"
 	fmt.Fprintln(out, "Plan your Kubernetes cluster:")
 
-	name, err := util.PromptForAnyString(in, out, "Cluster name (must be unique)", "kismatic-cluster")
+	name, err := util.PromptForAnyString(in, out, "Cluster name (must be unique)", "kubernetes")
 	if err != nil {
 		return fmt.Errorf("Error setting infrastructure provisioner: %v", err)
 	}
-
+	// If we're given the default cluster path, write the plan to its location in clusters
+	if planner.PlanFile == defaultClusterPath && planner.GeneratedDir == defaultClusterPath {
+		planner.SetDirs(name)
+	}
 	var provider string
 	availProviders, err := availableInfraProviders(providersDir)
 	if err != nil {
@@ -115,14 +117,6 @@ func doPlan(in io.Reader, out io.Writer, planner install.FilePlanner) error {
 	fmt.Fprintf(out, "- %d nfs volumes\n", nfsVolumes)
 	fmt.Fprintln(out)
 
-	// If we're using the default plan file location
-	if planner.File == "kismatic-cluster.yaml" {
-		if err := os.MkdirAll(filepath.Join("clusters", name), 0777); err != nil {
-			return err
-		}
-		planner.File = filepath.Join("clusters", name, planner.File)
-	}
-
 	// If we are using KET to provision infrastructure, use the template file
 	// defined by the infrastructure provider. Otherwise, generate the template
 	// as we always have.
@@ -153,10 +147,14 @@ func doPlan(in io.Reader, out io.Writer, planner install.FilePlanner) error {
 		StorageNodes:              storageNodes,
 		NFSVolumes:                nfsVolumes,
 	}
+	dir, _ := filepath.Split(planner.PlanFile)
+	if err := os.MkdirAll(dir, 0777); err != nil {
+		return err
+	}
 	if err = install.WritePlanTemplate(planTemplate, &planner); err != nil {
 		return fmt.Errorf("error planning installation: %v", err)
 	}
-	fmt.Fprintf(out, "Wrote plan file template to %q\n", planner.File)
+	fmt.Fprintf(out, "Wrote plan file template to %q\n", planner.PlanFile)
 	fmt.Fprintf(out, "Edit the plan file to further describe your cluster. Once ready, execute the \"install validate\" command to proceed.\n")
 	return nil
 }

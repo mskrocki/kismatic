@@ -3,6 +3,7 @@ package install
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"os"
 	"path/filepath"
@@ -599,7 +600,7 @@ func (sv StorageVolume) validate() (bool, []error) {
 		v.addError(errors.New("Replication count must be greater than zero"))
 	}
 	for _, a := range sv.AllowAddresses {
-		if ok := validateAllowedAddress(a); !ok {
+		if ok := ValidateAllowedAddress(a); !ok {
 			v.addError(fmt.Errorf("Invalid address %q in the list of allowed addresses", a))
 		}
 	}
@@ -621,7 +622,8 @@ func (sv StorageVolume) validate() (bool, []error) {
 	return v.valid()
 }
 
-func validateAllowedAddress(address string) bool {
+// ValidateAllowedAddress checks if address is a valid IP address.
+func ValidateAllowedAddress(address string) bool {
 	// First, validate that there are four octets with 1, 2 or 3 chars, separated by dots
 	r := regexp.MustCompile(`^[0-9*]{1,3}\.[0-9*]{1,3}\.[0-9*]{1,3}\.[0-9*]{1,3}$`)
 	if !r.MatchString(address) {
@@ -638,4 +640,40 @@ func validateAllowedAddress(address string) bool {
 		}
 	}
 	return true
+}
+
+// ValidateClusterExists does a simple check to see if the cluster folder+plan file exists in clusters
+func ValidateClusterExists(name string) (bool, error) {
+	files, err := ioutil.ReadDir("clusters")
+	if err != nil {
+		return false, err
+	}
+	for _, finfo := range files {
+		if finfo.Name() == name {
+			possiblePlans, err := ioutil.ReadDir(filepath.Join("clusters", finfo.Name()))
+			if err != nil {
+				return false, err
+			}
+			for _, possiblePlan := range possiblePlans {
+				if possiblePlan.Name() == "kismatic-cluster.yaml" {
+					return true, nil
+				}
+			}
+		}
+	}
+	return false, nil
+}
+
+// ValidatePlaybookExists does a check to make sure the step exists
+func ValidatePlaybookExists(play string) (bool, error) {
+	plays, err := ioutil.ReadDir("ansible/playbooks")
+	if err != nil {
+		return false, err
+	}
+	for _, finfo := range plays {
+		if finfo.Name() == play {
+			return true, nil
+		}
+	}
+	return false, nil
 }
