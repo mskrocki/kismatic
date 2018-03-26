@@ -14,7 +14,7 @@ type clustersOpts struct {
 	verbose bool
 }
 
-// NewCmdClusters creates a new install command
+// NewCmdClusters creates a new cluster command
 func NewCmdClusters(out io.Writer) *cobra.Command {
 	opts := &clustersOpts{}
 
